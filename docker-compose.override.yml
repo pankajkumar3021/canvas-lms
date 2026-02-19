@@ -1,0 +1,88 @@
+# See doc/docker/README.md or https://github.com/instructure/canvas-lms/tree/master/doc/docker
+version: '2.3'
+services:
+  jobs: &BASE
+    build:
+      context: .
+    volumes:
+      - .:/usr/src/app
+      - ./config/nginx/nginx.conf:/usr/src/nginx/nginx.conf
+      - api_docs:/usr/src/app/public/doc/api
+      - brandable_css_brands:/usr/src/app/app/stylesheets/brandable_css_brands
+      - bundler:/home/docker/.bundle/
+      - canvas-docker-gems:/home/docker/.gem/
+      - js-utils_es:/usr/src/app/packages/js-utils/es
+      - js-utils_lib:/usr/src/app/packages/js-utils/lib
+      - js-utils_node_modules:/usr/src/app/packages/js-utils/node_modules
+      - locales:/usr/src/app/config/locales/generated
+      - log:/usr/src/app/log
+      - node_modules:/usr/src/app/node_modules
+      - pacts:/usr/src/app/pacts
+      - public_dist:/usr/src/app/public/dist
+      - reports:/usr/src/app/reports
+      - styleguide:/usr/src/app/app/views/info
+      - tmp:/usr/src/app/tmp
+      - translations:/usr/src/app/public/javascripts/translations
+      - yardoc:/usr/src/app/.yardoc
+      - yarn-cache:/home/docker/.cache/yarn
+    environment: &BASE-ENV
+      ENCRYPTION_KEY: bbc72f9440f42fe6c304eae0cb128dc1e8eb940188779a1a51abaf855c0a4660c481ed52ac6f363e
+      RAILS_ENV: production
+      CANVAS_DATABASE_PRODUCTION: canvas_development
+      CANVAS_LMS_ADMIN_EMAIL: admin@mygradex.com
+      CANVAS_LMS_ADMIN_PASSWORD: changeme123
+      CANVAS_LMS_ACCOUNT_NAME: MyGradeX LMS
+      CANVAS_LMS_STATS_COLLECTION: opt_out
+
+  web:
+    <<: *BASE
+    ports:
+      - "3001:80"
+    environment:
+      <<: *BASE-ENV
+      VIRTUAL_HOST: lms.mygradex.com
+      HTTPS_METHOD: noredirect
+
+  postgres:
+    command: >
+      postgres
+      -c shared_buffers=1GB
+      -c effective_cache_size=4GB
+      -c work_mem=32MB
+      -c maintenance_work_mem=256MB
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+  githook_installer:
+    build:
+      context: .
+      dockerfile: 'Dockerfile.githook'
+    volumes:
+      - ./.git:/tmp/.git
+      - ./hooks:/tmp/hooks
+      - ./script:/tmp/script
+
+volumes:
+  api_docs: {}
+  brandable_css_brands: {}
+  bundler: {}
+  canvas-docker-gems: {}
+  i18nliner_node_modules: {}
+  js-utils_es: {}
+  js-utils_lib: {}
+  js-utils_node_modules: {}
+  k5uploader_es: {}
+  k5uploader_lib: {}
+  k5uploader_node_modules: {}
+  locales: {}
+  log: {}
+  node_modules: {}
+  pg_data: {}
+  pacts: {}
+  public_dist: {}
+  reports: {}
+  styleguide: {}
+  tmp: {}
+  translations: {}
+  yardoc: {}
+  yarn-cache: {}
